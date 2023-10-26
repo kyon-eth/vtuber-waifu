@@ -1,15 +1,17 @@
 import json
 import sys
 
-sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
+def custom_print(data):
+    with open('output.txt', 'a', encoding='utf8') as file:
+        print(data, file=file)
 
 outputNum = 20
 
-def getIdentity(identityPath):  
+def getIdentity(identityPath):
     with open(identityPath, "r", encoding="utf-8") as f:
         identityContext = f.read()
     return {"role": "user", "content": identityContext}
-    
+
 def getPrompt():
     total_len = 0
     prompt = []
@@ -35,19 +37,14 @@ def getPrompt():
     
     while total_len > 4000:
         try:
-            # print(total_len)
-            # print(len(prompt))
             prompt.pop(2)
             total_len = sum(len(d['content']) for d in prompt)
         except:
-            print("Error: Prompt too long!")
-
-    # total_characters = sum(len(d['content']) for d in prompt)
-    # print(f"Total characters: {total_characters}")
+            custom_print("Error: Prompt too long!")
 
     return prompt
 
 if __name__ == "__main__":
     prompt = getPrompt()
-    print(prompt)
-    print(len(prompt))
+    custom_print(prompt)
+    custom_print(len(prompt))
