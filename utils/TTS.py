@@ -2,7 +2,7 @@ import os
 import torch
 import requests
 import urllib.parse
-from utils.katakana import *
+# from utils.katakana import *
 
 # https://github.com/snakers4/silero-models#text-to-speech
 def silero_tts(tts, language, model, speaker):
@@ -29,7 +29,8 @@ def voicevox_tts(tts):
     
     voicevox_url = 'http://localhost:50021'
     # Convert the text to katakana. Example: ORANGE -> オレンジ, so the voice will sound more natural
-    katakana_text = katakana_converter(tts)
+    # katakana_text = katakana_converter(tts)
+    katakana_text = tts
     # You can change the voice to your liking. You can find the list of voices on speaker.json
     # or check the website https://voicevox.hiroshiba.jp
     params_encoded = urllib.parse.urlencode({'text': katakana_text, 'speaker': 46})
