@@ -149,26 +149,20 @@ def play_to_virtual_mic(wave_file_path):
     
     def stream_audio():
         try:
-            wf = wave.open(wave_file_path, 'rb')
-            samplerate = wf.getframerate()
-            
-            # Set the output device to the virtual microphone
-            with sd.OutputStream(device=VIRTUAL_MIC_DEVICE_INDEX, channels=wf.getnchannels(), samplerate=samplerate, dtype='int16') as stream:
-                data = wf.readframes(1024)
-                while data:
-                    # Convert byte data to numpy array
-                    audio_data = np.frombuffer(data, dtype=np.int16)
-                    stream.write(audio_data)
-                    data = wf.readframes(1024)
+            with wave.open(wave_file_path, 'rb') as wf:
+                samplerate = wf.getframerate()
+                channels = wf.getnchannels()
+
+                # Read all frames from the wave file
+                frames = wf.readframes(-1)
+                audio_data = np.frombuffer(frames, dtype=np.int16)
                 
-                # Explicitly stop the stream
-                stream.stop()
+                with sd.OutputStream(device=VIRTUAL_MIC_DEVICE_INDEX, channels=channels, samplerate=samplerate, dtype='int16') as stream:
+                    stream.write(audio_data)
+
         except Exception as e:
             print(f"An error occurred: {e}")
-        
-        # Close wave file
-        wf.close()
-    
+
     # Run the streaming in a separate thread
     threading.Thread(target=stream_audio).start()
 
