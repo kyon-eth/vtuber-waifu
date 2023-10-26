@@ -14,11 +14,11 @@ from utils.TTS import *
 from utils.subtitle import *
 from utils.promptMaker import *
 
-import logging.config
-logging.config.dictConfig({
-    'version': 1,
-    'disable_existing_loggers': True
-})
+# import logging.config
+# logging.config.dictConfig({
+#     'version': 1,
+#     'disable_existing_loggers': True
+# })
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,7 +46,23 @@ blacklist = ["Nightbot", "streamelements"]
 queue_recv = asyncio.Queue()  
 queue_proc = asyncio.Queue(maxsize=1)
 
+pygame.mixer.init()
 
+def get_openai_response(prompt):
+    try:
+        # Creating a chat completion with the user's prompt
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=prompt,
+        )
+        
+        # Extracting the assistant’s reply from the response
+        message = response['choices'][0]['message']['content']
+        return message
+    
+    except Exception as e:
+        print(f"An error occurred while querying the OpenAI API: {e}")
+        return None
 
 # function to get an answer from OpenAI
 def openai_answer():
@@ -69,17 +85,24 @@ def openai_answer():
 
     prompt = getPrompt()
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=prompt,
-        max_tokens=128,
-        temperature=1,
-        top_p=0.9
-    )
-    message = response['choices'][0]['message']['content']
+    # response = openai.ChatCompletion.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=prompt,
+    #     max_tokens=128,
+    #     temperature=1,
+    #     top_p=0.9
+    # )
+    message = get_openai_response(prompt)
+    
+    logging.info("Response: {0}".format(message))
     conversation.append({'role': 'assistant', 'content': message})
+    
+    # User: Message
+    # remove User: from message
+    if ":" in message:
+        message = message.split(": ")[1]
 
-    translate_text(message)
+    return translate_text(message)
 
 # translating is optional
 def translate_text(text):
@@ -88,7 +111,7 @@ def translate_text(text):
     tts_en = text
 
     # Silero TTS, Silero TTS can generate English, Russian, French, Hindi, Spanish, German, etc. Uncomment the line below. Make sure the input is in that language
-    silero_tts(tts_en, "en", "v3_en", "en_21")
+    audio_file = silero_tts(tts_en, "en", "v3_en", "en_21")
 
     # Generate Subtitle
     generate_subtitle(chat_now, text)
@@ -98,10 +121,10 @@ def translate_text(text):
     # is_Speaking is used to prevent the assistant speaking more than one audio at a time
     is_Speaking = True
     
-    pygame.mixer.music.load("test.wav")
-    pygame.mixer.music.play()
-    while pygame.mixer.music.get_busy():
-        pygame.time.Clock().tick(10)
+    # pygame.mixer.music.load("test.wav")
+    # pygame.mixer.music.play()
+    # while pygame.mixer.music.get_busy():
+    #     pygame.time.Clock().tick(10)
     
     # winsound.PlaySound("test.wav", winsound.SND_FILENAME)
     is_Speaking = False
@@ -112,6 +135,8 @@ def translate_text(text):
         f.truncate(0)
     with open ("chat.txt", "w") as f:
         f.truncate(0)
+        
+    return audio_file
 
 def preparation(chat):
     global conversation, chat_now, chat_prev
@@ -121,13 +146,8 @@ def preparation(chat):
         # Saving chat history
         conversation.append({'role': 'user', 'content': chat_now})
         chat_prev = chat_now
-        openai_answer()
-    time.sleep(1)
-
-async def openai(message):
-    await asyncio.sleep(0.2)
-    logging.info(f"Processed: {message}")
-
+        return openai_answer()
+    # time.sleep(1)
 
 # Global variable to store speaking duration
 speak_duration = 1  # You can dynamically adjust this based on the length of the response
@@ -152,15 +172,26 @@ async def preprocess_message(queue_recv, queue_proc):
             message = skipped_messages[-1]
         
         # (Your preprocessing code here, such as openai_answer(), etc.)
-        preparation(message)  
-        await queue_proc.put(message) 
+        audio = preparation(message)  
+        await queue_proc.put({"audio": audio, 
+                              "message": message,}) 
         logging.info(f"Preprocessed: {message}")
         
         
 async def handle_message(queue_proc):
     while True:
         global speak_duration
-        message = await queue_proc.get()
+        data = await queue_proc.get()
+        
+        audio_file, message = data["audio"], data["message"]
+        
+        pygame.mixer.music.load(audio_file)
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
+            
+        # delete the audio file
+        os.remove(audio_file)
         
         speak_duration = random.randint(1, 5)  
         logging.info(f"Handled: {message}")

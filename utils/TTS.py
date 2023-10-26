@@ -2,11 +2,13 @@ import os
 import torch
 import requests
 import urllib.parse
+import datetime
+import soundfile as sf
 # from utils.katakana import *
 
 # https://github.com/snakers4/silero-models#text-to-speech
 def silero_tts(tts, language, model, speaker):
-    device = torch.device('cpu')
+    device = torch.device('gpu' if torch.cuda.is_available() else 'cpu')
     torch.set_num_threads(4)
     local_file = 'model.pt'
 
@@ -17,12 +19,23 @@ def silero_tts(tts, language, model, speaker):
     model = torch.package.PackageImporter(local_file).load_pickle("tts_models", "model")
     model.to(device)
 
-    example_text = "i'm fine thank you and you?"
     sample_rate = 48000
 
-    audio_paths = model.save_wav(text=tts,
-                                speaker=speaker,
-                                sample_rate=sample_rate)
+    audio = model.apply_tts(text=tts,
+                             speaker=speaker,
+                             sample_rate=sample_rate)
+    
+    # Generating a unique filename using timestamp
+    filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.wav'
+    filepath = os.path.join('output_audios', filename)
+    
+    # Ensure the output directory exists
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    # Save the audio file
+    sf.write(filepath, audio, sample_rate)
+    
+    return filepath
     
 def voicevox_tts(tts):
     # You need to run VoicevoxEngine.exe first before running this script
