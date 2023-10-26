@@ -4,10 +4,13 @@ import websockets
 from rich.logging import RichHandler
 import logging
 import openai
-import pygame
+# import pygame
 import sys
 import time
 import json
+import pyaudio
+import wave
+import threading
 from config import *
 # from utils.translate import *
 from utils.TTS import *
@@ -46,7 +49,7 @@ blacklist = ["Nightbot", "streamelements"]
 queue_recv = asyncio.Queue()  
 queue_proc = asyncio.Queue(maxsize=1)
 
-pygame.mixer.init()
+# pygame.mixer.init()
 
 def get_openai_response(prompt):
     try:
@@ -138,6 +141,32 @@ def translate_text(text):
         
     return audio_file
 
+
+
+def play_to_virtual_mic(wave_file_path):
+    p = pyaudio.PyAudio()
+
+    def stream_audio():
+        wf = wave.open(wave_file_path, 'rb')
+        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                        channels=wf.getnchannels(),
+                        rate=wf.getframerate(),
+                        output=True,
+                        output_device_index=VIRTUAL_MIC_DEVICE_INDEX)
+
+        data = wf.readframes(1024)
+        while data:
+            stream.write(data)
+            data = wf.readframes(1024)
+
+        stream.stop_stream()
+        stream.close()
+        wf.close()
+
+    threading.Thread(target=stream_audio).start()
+
+
+
 def preparation(chat):
     global conversation, chat_now, chat_prev
     chat_now = chat
@@ -185,11 +214,13 @@ async def handle_message(queue_proc):
         
         audio_file, message = data["audio"], data["message"]
         
-        pygame.mixer.music.load(audio_file)
-        pygame.mixer.music.play()
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
-            
+        # pygame.mixer.music.load(audio_file)
+        # pygame.mixer.music.play()
+        # while pygame.mixer.music.get_busy():
+        #     pygame.time.Clock().tick(10)
+        
+        play_to_virtual_mic(audio_file)
+        
         # delete the audio file
         os.remove(audio_file)
         
