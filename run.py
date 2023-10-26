@@ -1,5 +1,6 @@
 import openai
-import winsound
+# import winsound
+import pygame
 import sys
 import pytchat
 import time
@@ -36,6 +37,9 @@ chat_prev = ""
 is_Speaking = False
 owner_name = "Ardha"
 blacklist = ["Nightbot", "streamelements"]
+
+# Initialize the mixer
+pygame.mixer.init()
 
 # function to get the user's input audio
 def record_audio():
@@ -212,7 +216,13 @@ def translate_text(text):
 
     # is_Speaking is used to prevent the assistant speaking more than one audio at a time
     is_Speaking = True
-    winsound.PlaySound("test.wav", winsound.SND_FILENAME)
+    
+    pygame.mixer.music.load("test.wav")
+    pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
+    
+    # winsound.PlaySound("test.wav", winsound.SND_FILENAME)
     is_Speaking = False
 
     # Clear the text files after the assistant has finished speaking
