@@ -190,17 +190,19 @@ def translate_text(text):
     # subtitle = translate_google(text, "ID")
 
     # tts will be the string to be converted to audio
-    detect = detect_google(text)
-    tts = translate_google(text, f"{detect}", "JA")
+    # detect = detect_google(text)
+    # tts = translate_google(text, f"{detect}", "JA")
     # tts = translate_deeplx(text, f"{detect}", "JA")
-    tts_en = translate_google(text, f"{detect}", "EN")
-    try:
-        # print("ID Answer: " + subtitle)
-        print("JP Answer: " + tts)
-        print("EN Answer: " + tts_en)
-    except Exception as e:
-        print("Error printing text: {0}".format(e))
-        return
+    # tts_en = translate_google(text, f"{detect}", "EN")
+    # try:
+    #     # print("ID Answer: " + subtitle)
+    #     print("JP Answer: " + tts)
+    #     print("EN Answer: " + tts_en)
+    # except Exception as e:
+    #     print("Error printing text: {0}".format(e))
+    #     return
+    
+    tts_en = text
 
     # Choose between the available TTS engines
     # Japanese TTS
