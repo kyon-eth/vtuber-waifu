@@ -39,8 +39,7 @@ is_Speaking = False
 owner_name = "Ardha"
 blacklist = ["Nightbot", "streamelements"]
 
-# Initialize the mixer
-pygame.mixer.init()
+
 
 # function to get the user's input audio
 def record_audio():
@@ -253,6 +252,9 @@ if __name__ == "__main__":
         # You can change the mode to 1 if you want to record audio from your microphone
         # or change the mode to 2 if you want to capture livechat from youtube
         mode = input("Mode (1-Mic, 2-Youtube Live, 3-Twitch Live): ")
+        
+        # Initialize the mixer
+        pygame.mixer.init()
 
         if mode == "1":
             print("Press and Hold Right Shift to record audio")
