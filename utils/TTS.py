@@ -8,7 +8,8 @@ import soundfile as sf
 
 # https://github.com/snakers4/silero-models#text-to-speech
 def silero_tts(tts, language, model, speaker):
-    device = torch.device('gpu' if torch.cuda.is_available() else 'cpu')
+    # device = torch.device('gpu' if torch.cuda.is_available() else 'cpu')
+    device = 'cpu'
     torch.set_num_threads(4)
     local_file = 'model.pt'
 

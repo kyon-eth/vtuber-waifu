@@ -9,6 +9,8 @@ import sys
 import time
 import json
 import pyaudio
+import sounddevice as sd
+import numpy as np
 import wave
 import threading
 from config import *
@@ -144,25 +146,25 @@ def translate_text(text):
 
 
 def play_to_virtual_mic(wave_file_path):
-    p = pyaudio.PyAudio()
-
+    
     def stream_audio():
-        wf = wave.open(wave_file_path, 'rb')
-        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-                        channels=wf.getnchannels(),
-                        rate=wf.getframerate(),
-                        output=True,
-                        output_device_index=VIRTUAL_MIC_DEVICE_INDEX)
-
-        data = wf.readframes(1024)
-        while data:
-            stream.write(data)
+        try:
+            wf = wave.open(wave_file_path, 'rb')
+            samplerate = wf.getframerate()
             data = wf.readframes(1024)
-
-        stream.stop_stream()
-        stream.close()
-        wf.close()
-
+            
+            # Set the output device to the virtual microphone
+            with sd.OutputStream(device=VIRTUAL_MIC_DEVICE_INDEX, channels=wf.getnchannels(), samplerate=samplerate, dtype='int16') as stream:
+                while data:
+                    # Convert byte data to numpy array
+                    audio_data = np.frombuffer(data, dtype=np.int16)
+                    stream.write(audio_data)
+                    
+                    data = wf.readframes(1024)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+    
+    # Run the streaming in a separate thread
     threading.Thread(target=stream_audio).start()
 
 
