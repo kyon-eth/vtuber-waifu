@@ -20,7 +20,8 @@ from utils.promptMaker import *
 from utils.twitch_config import *
 
 # to help the CLI write unicode characters to the terminal
-sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
+if os.name == 'nt':  # Check if the operating system is Windows
+    sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
 
 # use your own API Key, you can get it from https://openai.com/. I place my API Key in a separate file called config.py
 openai.api_key = api_key
