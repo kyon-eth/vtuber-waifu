@@ -9,34 +9,37 @@ import soundfile as sf
 # https://github.com/snakers4/silero-models#text-to-speech
 def silero_tts(tts, language, model, speaker):
     # device = torch.device('gpu' if torch.cuda.is_available() else 'cpu')
-    device = 'cpu'
-    torch.set_num_threads(4)
-    local_file = 'model.pt'
+    try:
+        device = 'cpu'
+        torch.set_num_threads(4)
+        local_file = 'model.pt'
 
-    if not os.path.isfile(local_file):
-        torch.hub.download_url_to_file(f'https://models.silero.ai/models/tts/{language}/{model}.pt',
-                                    local_file)  
+        if not os.path.isfile(local_file):
+            torch.hub.download_url_to_file(f'https://models.silero.ai/models/tts/{language}/{model}.pt',
+                                        local_file)  
 
-    model = torch.package.PackageImporter(local_file).load_pickle("tts_models", "model")
-    model.to(device)
+        model = torch.package.PackageImporter(local_file).load_pickle("tts_models", "model")
+        model.to(device)
 
-    sample_rate = 48000
+        sample_rate = 48000
 
-    audio = model.apply_tts(text=tts,
-                             speaker=speaker,
-                             sample_rate=sample_rate)
-    
-    # Generating a unique filename using timestamp
-    filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.wav'
-    filepath = os.path.join('output_audios', filename)
-    
-    # Ensure the output directory exists
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    
-    # Save the audio file
-    sf.write(filepath, audio, sample_rate)
-    
-    return filepath
+        audio = model.apply_tts(text=tts,
+                                speaker=speaker,
+                                sample_rate=sample_rate)
+        
+        # Generating a unique filename using timestamp
+        filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.wav'
+        filepath = os.path.join('output_audios', filename)
+        
+        # Ensure the output directory exists
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
+        # Save the audio file
+        sf.write(filepath, audio, sample_rate)
+        
+        return filepath
+    except:
+        return None
     
 def voicevox_tts(tts):
     # You need to run VoicevoxEngine.exe first before running this script
