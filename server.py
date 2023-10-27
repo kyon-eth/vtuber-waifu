@@ -110,6 +110,7 @@ def play_to_virtual_mic(wave_file_path, text):
     
     def stream_audio():
         try:
+            global speak_duration
             # Generate Subtitle
             generate_subtitle(chat_now, text)
 
@@ -130,6 +131,8 @@ def play_to_virtual_mic(wave_file_path, text):
                     f.truncate(0)
                 with open ("chat.txt", "w") as f:
                     f.truncate(0)
+                    
+                speak_duration = 0
 
         except Exception as e:
             print(f"An error occurred: {e}")
